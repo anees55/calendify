@@ -1,28 +1,62 @@
-"use client"
+"use client";
 
-import { useRouter } from 'next/navigation';
-import { Search, Bell, HelpCircle, Menu } from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuLabel, 
-  DropdownMenuSeparator, 
+import { useRouter } from "next/navigation";
+import { Search, Bell, HelpCircle, Menu } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
-  DropdownMenuGroup
-} from '@/components/ui/dropdown-menu';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Button, buttonVariants } from '@/components/ui/button';
-import { useAuthStore, useUIStore } from '@/store/useStore';
-import { cn } from '@/lib/utils';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import Sidebar from './Sidebar';
+  DropdownMenuGroup,
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import Sidebar from "./Sidebar";
+import { supabase } from "@/lib/supabaseClient";
+import { useEffect, useState } from "react";
 
 export default function Navbar() {
-  const { user, logout } = useAuthStore();
-  const { setMobileMenuOpen } = useUIStore();
-  const router = useRouter();
+   const router = useRouter();
+  const [user, setUser] = useState<any>(null);
+
+  // 🔥 Get Supabase user
+  useEffect(() => {
+    const getUser = async () => {
+      const { data } = await supabase.auth.getUser();
+      setUser(data.user);
+    };
+
+    getUser();
+
+    // live auth updates
+    const { data: listener } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        setUser(session?.user || null);
+      }
+    );
+
+    return () => {
+      listener.subscription.unsubscribe();
+    };
+  }, []);
+
+  // 🔥 Logout (REAL)
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    router.replace("/");
+  };
+
+  const fullName =
+    user?.user_metadata?.full_name || user?.email?.split("@")[0];
+
+  const avatar =
+    user?.user_metadata?.avatar_url ||
+    `https://ui-avatars.com/api/?name=${fullName}`;
 
   return (
     <header className="h-16 shrink-0 border-b border-border bg-background/50 backdrop-blur-md flex items-center justify-between px-4 md:px-8 z-20">
@@ -60,22 +94,30 @@ export default function Navbar() {
           <DropdownMenuTrigger render={
             <button className={cn(buttonVariants({ variant: "ghost" }), "relative h-10 w-10 rounded-full")}>
               <Avatar className="h-10 w-10 border border-border">
-                <AvatarImage src={user?.avatar} alt={user?.name} />
-                <AvatarFallback>{user?.name?.charAt(0)}</AvatarFallback>
+                <AvatarImage src={avatar} />
+                <AvatarFallback>
+                  {fullName?.charAt(0)?.toUpperCase()}
+                </AvatarFallback>
               </Avatar>
             </button>
           } />
+  
           <DropdownMenuContent className="w-56" align="end">
             <DropdownMenuGroup>
               <DropdownMenuLabel className="font-normal">
                 <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium leading-none">{user?.name}</p>
+                  <p className="text-sm font-medium leading-none">
+                    {fullName}
+                  </p>
                   <p className="text-xs leading-none text-muted-foreground">
                     {user?.email}
                   </p>
                 </div>
               </DropdownMenuLabel>
             </DropdownMenuGroup>
+
+            <DropdownMenuSeparator />
+
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => router.push('/settings')}>
               Profile
@@ -85,7 +127,7 @@ export default function Navbar() {
             </DropdownMenuItem>
             <DropdownMenuItem>Team</DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-destructive" onClick={logout}>Log out</DropdownMenuItem>
+            <DropdownMenuItem className="text-destructive" onClick={handleLogout}>Log out</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

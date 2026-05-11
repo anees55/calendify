@@ -1,31 +1,54 @@
-"use client"
+"use client";
 
-import React, { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import Sidebar from '@/components/layout/Sidebar';
-import Navbar from '@/components/layout/Navbar';
-import { useAuthStore } from '@/store/useStore';
+import React, { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import Sidebar from "@/components/layout/Sidebar";
+import Navbar from "@/components/layout/Navbar";
+import { supabase } from "@/lib/supabaseClient";
 
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const { user } = useAuthStore();
-  const router = useRouter();
-  const [mounted, setMounted] = React.useState(false);
+ 
 
-  React.useEffect(() => {
-    setMounted(true);
-  }, []);
+   const router = useRouter();
+  const [loading, setLoading] = useState(true);
+  const [session, setSession] = useState<any>(null);
 
-  React.useEffect(() => {
-    if (mounted && !user) {
-      router.replace('/');
-    }
-  }, [user, router, mounted]);
+  useEffect(() => {
+    const checkSession = async () => {
+      const { data } = await supabase.auth.getSession();
 
-  if (!mounted || !user) {
+      if (!data.session) {
+        router.replace("/");
+        return;
+      }
+
+      setSession(data.session);
+      setLoading(false);
+    };
+
+    checkSession();
+
+    // 🔥 Listen to auth changes (important for login/logout)
+    const { data: listener } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        if (!session) {
+          router.replace("/");
+        } else {
+          setSession(session);
+        }
+      }
+    );
+
+    return () => {
+      listener.subscription.unsubscribe();
+    };
+  }, [router]);
+
+  if (loading || !session) {
     return (
       <div className="h-screen w-full flex items-center justify-center bg-background">
         <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />

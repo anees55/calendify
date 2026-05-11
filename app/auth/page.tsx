@@ -19,29 +19,31 @@ import { Label } from '@/components/ui/label';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/useStore';
 import Link from 'next/link';
+import { signInWithGoogle } from "../auth/auth";
+
 
 export default function AuthPage() {
-  const router = useRouter();
-  const { login, user } = useAuthStore();
-  const [mode, setMode] = useState<'login' | 'signup'>('login');
+
+
+  const [mode, setMode] = useState<"login" | "signup">("login");
   const [isLoading, setIsLoading] = useState(false);
-  const [mounted, setMounted] = useState(false);
 
-  useEffect(() => {
-    setMounted(true);
-    if (user) router.replace('/dashboard');
-  }, [user, router]);
-
-  const handleAuth = async (e: React.FormEvent) => {
+  const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    login();
-    router.push('/dashboard');
+
+    // ⚠️ Placeholder only (you can later connect Supabase email auth)
+    await new Promise((resolve) => setTimeout(resolve, 1200));
+
+    setIsLoading(false);
   };
 
-  if (!mounted) return null;
+  const handleGoogle = async () => {
+    setIsLoading(true);
+    await signInWithGoogle();
+    // redirect handled by Supabase → /auth/callback
+  };
+
 
   return (
     <div className="min-h-screen bg-background flex flex-col lg:flex-row overflow-hidden selection:bg-primary/30">
@@ -141,7 +143,7 @@ export default function AuthPage() {
               </div>
 
               <div className="flex flex-col sm:flex-row gap-3">
-                <Button variant="outline" className="flex-1 h-12 rounded-2xl gap-3 font-bold border-border/60 hover:bg-muted/50 transition-all">
+                <Button  onClick={handleGoogle} variant="outline" className="flex-1 h-12 rounded-2xl gap-3 font-bold border-border/60 hover:bg-muted/50 transition-all">
                   <img src="https://www.google.com/favicon.ico" className="w-4 h-4" alt="Google" />
                   Google
                 </Button>
@@ -160,7 +162,7 @@ export default function AuthPage() {
                 </div>
               </div>
 
-              <form onSubmit={handleAuth} className="space-y-5">
+              <form onSubmit={handleEmailAuth} className="space-y-5">
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase tracking-widest ml-1 text-muted-foreground">Email Address</Label>
                   <div className="relative group">

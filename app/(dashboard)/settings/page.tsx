@@ -18,7 +18,6 @@ import {
   Save, 
   ChevronRight,
   Settings as SettingsIcon,
-  LogOut,
   Smartphone,
   Lock,
   Eye,
@@ -38,7 +37,7 @@ const SETTINGS_TABS = [
 ];
 
 export default function Settings() {
-  const { user, logout } = useAuthStore();
+  const { user } = useAuthStore();
   const [activeTab, setActiveTab] = useState('profile');
   const [mounted, setMounted] = useState(false);
 
@@ -94,18 +93,6 @@ export default function Settings() {
             </button>
           ))}
           
-          <div className="pt-8 mt-8 border-t border-border/40">
-            <Button 
-              variant="ghost" 
-              className="w-full justify-start gap-4 h-14 rounded-2xl text-destructive hover:bg-destructive/10 hover:text-destructive"
-              onClick={() => logout()}
-            >
-              <div className="w-10 h-10 rounded-xl bg-destructive/10 flex items-center justify-center">
-                <LogOut className="w-5 h-5" />
-              </div>
-              <span className="font-bold">Logout Session</span>
-            </Button>
-          </div>
         </aside>
 
         {/* Content Area */}

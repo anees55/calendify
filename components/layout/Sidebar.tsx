@@ -1,31 +1,38 @@
-"use client"
+"use client";
 
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { 
-  LayoutDashboard, 
-  Users, 
-  PlusCircle, 
-  Calendar as CalendarIcon, 
-  Settings, 
-  LogOut 
-} from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
-import { useAuthStore } from '@/store/useStore';
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import {
+  LayoutDashboard,
+  Users,
+  PlusCircle,
+  Calendar as CalendarIcon,
+  Settings,
+  LogOut,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { supabase } from "@/lib/supabaseClient";
 
 const sidebarItems = [
-  { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
-  { icon: Users, label: 'My Meetings', path: '/meetings' },
-  { icon: PlusCircle, label: 'Create Meeting', path: '/meetings/new' },
-  { icon: CalendarIcon, label: 'Calendar', path: '/calendar' },
-  { icon: Settings, label: 'Settings', path: '/settings' },
+  { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
+  { icon: Users, label: "My Meetings", path: "/meetings" },
+  { icon: PlusCircle, label: "Create Meeting", path: "/meetings/new" },
+  { icon: CalendarIcon, label: "Calendar", path: "/calendar" },
+  { icon: Settings, label: "Settings", path: "/settings" },
 ];
 
-export default function Sidebar({ isMobile = false }: { isMobile?: boolean }) {
-  const pathname = usePathname();
-  const { logout } = useAuthStore();
 
+export default function Sidebar({ isMobile = false }: { isMobile?: boolean }) {
+
+  const pathname = usePathname();
+  const router = useRouter();
+
+  // 🔥 Supabase logout (REAL FIX)
+  const handleLogout = async () => {
+    await supabase.auth.signOut(); // remove session
+    router.replace("/"); // send to home/login
+  };
   return (
     <aside className={cn(
       "border-r border-border bg-card/30 backdrop-blur-xl flex flex-col z-20 h-full transition-all duration-300 ease-in-out",
@@ -80,13 +87,13 @@ export default function Sidebar({ isMobile = false }: { isMobile?: boolean }) {
       </nav>
 
       <div className="p-4 border-t border-border/40">
-        <Button 
-          variant="ghost" 
+        <Button
+          variant="ghost"
           className={cn(
             "w-full h-12 rounded-2xl gap-4 font-bold text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all",
             !isMobile && "xl:justify-start justify-center"
           )}
-          onClick={logout}
+          onClick={handleLogout}
         >
           <LogOut className="w-5 h-5 shrink-0" />
           <span className={cn(
